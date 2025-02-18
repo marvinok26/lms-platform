@@ -1,3 +1,5 @@
+import { db } from "@/lib/db";
+
 const CourseIdPage = ({
     params
 }: {
@@ -5,6 +7,12 @@ const CourseIdPage = ({
         courseId: string
     }
 }) => {
+    const course = await db.course.findUnique({
+        where: {
+            id: params.courseId
+        }
+    });
+
     return ( 
         <div>
             Course Id: {params.courseId}
