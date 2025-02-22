@@ -2,13 +2,14 @@ import { db } from "@/lib/db";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-export async function PATCH (
+export async function PATCH(
     req: Request,
     { params }: { params: { courseId: string } }
-){
+) {
     try {
         const { userId } = getAuth(req);
-        const {courseId} = params
+        // Make sure params is typed correctly
+        const courseId = params.courseId;
         const values = await req.json();
 
         if (!userId) {

@@ -4,6 +4,14 @@ import * as z from "zod"
 import axios from "axios"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { Button } from "@/components/ui/button"
+import { Pencil } from "lucide-react"
+import { useState } from "react"
+import toast from "react-hot-toast"
+import { useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
+import { Textarea } from "@/components/ui/textarea"
+import { Course } from "@prisma/client"
 
 import {
     Form,
@@ -12,20 +20,11 @@ import {
     FormItem,
     FormMessage,
 } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
-import { Pencil } from "lucide-react"
-import { useState } from "react"
-import toast from "react-hot-toast"
-import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Textarea } from "@/components/ui/textarea"
 
 interface DescriptionFormProps {
-    initialData: {
-        description: string
-    };
-    courseId: string
-};
+    initialData: Course;
+    courseId: string;
+}
 
 const formSchema = z.object({
     description: z.string().min(1, {
@@ -38,19 +37,19 @@ export const DescriptionForm = ({
     courseId
 }: DescriptionFormProps) => {
     const [isEditing, setIsEditing] = useState(false);
-
-    const toggleEdit = () => {
-        setIsEditing((current) => !current);
-    }
-
     const router = useRouter();
+
+    const toggleEdit = () => setIsEditing((current) => !current);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: initialData,
+        defaultValues: {
+            description: initialData?.description || ""
+        },
     });
 
     const { isSubmitting, isValid } = form.formState;
+
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
             await axios.patch(`/api/courses/${courseId}`, values);
@@ -58,7 +57,7 @@ export const DescriptionForm = ({
             toggleEdit();
             router.refresh();
         } catch {
-            toast.error("Something went wrong")
+            toast.error("Something went wrong");
         }
     }
 
@@ -68,9 +67,7 @@ export const DescriptionForm = ({
                 Course Description
                 <Button onClick={toggleEdit} variant="ghost">
                     {isEditing ? (
-                        <>
-                            Cancel
-                        </>
+                        <>Cancel</>
                     ) : (
                         <>
                             <Pencil className="h-4 w-4 mr-2" />
@@ -80,15 +77,11 @@ export const DescriptionForm = ({
                 </Button>
             </div>
             {!isEditing && (
-                <p className="text-sm mt-2">
-                    {!isEditing && (
-                        <p className={cn(
-                            "text-sm mt-2",
-                            !initialData.description && "text-slate-500 italic"
-                        )}>
-                            {initialData.description || "No description"}
-                        </p>
-                    )}
+                <p className={cn(
+                    "text-sm mt-2",
+                    !initialData.description && "text-slate-500 italic"
+                )}>
+                    {initialData.description || "No description"}
                 </p>
             )}
             {isEditing && (
@@ -102,7 +95,9 @@ export const DescriptionForm = ({
                                     <FormControl>
                                         <Textarea
                                             disabled={isSubmitting}
-                                            placeholder="e.g. 'This course is about...'" {...field} />
+                                            placeholder="e.g. 'This course is about...'"
+                                            {...field}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -111,7 +106,10 @@ export const DescriptionForm = ({
                         <div className="flex items-center gap-x-2">
                             <Button
                                 disabled={!isValid || isSubmitting}
-                                type="submit">Save</Button>
+                                type="submit"
+                            >
+                                Save
+                            </Button>
                         </div>
                     </form>
                 </Form>
