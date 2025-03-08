@@ -8,8 +8,8 @@ export async function POST(
 ) {
     try {
         const { userId } = await auth();
-        const { url } = await req.json();
-        
+        const { title } = await req.json();
+
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
@@ -21,22 +21,33 @@ export async function POST(
             }
         });
 
-        if (!courseOwner) {
+        if(!courseOwner) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const attachment = await db.attachment.create({
-            data: {
-                url,
-                name: url.split("/").pop() || "file",
-                courseId: params.courseId,
+        const lastChapter = await db.chapter.findFirst({
+            where: {
+                courseId: params.courseId
+            },
+            orderBy: {
+                position: "desc"
             }
         });
 
-        return NextResponse.json(attachment);
+        const newPosition = lastChapter ? lastChapter.position + 1 : 1;
+
+        const chapter = await db.chapter.create({
+            data: {
+                title,
+                courseId: params.courseId,
+                position: newPosition
+            }
+        });
+
+        return NextResponse.json(chapter);
 
     } catch (error) {
-        console.log("COURSE_ID_ATTACHMENTS", error);  
-        return new NextResponse("Internal Error", { status: 500 }); 
+        console.log("[CHAPTERS]", error);
+        return new NextResponse("Internal Error", { status: 500 });
     }
 }

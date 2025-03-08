@@ -1,12 +1,12 @@
 import { db } from "@/lib/db";
-import { auth, getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export async function POST(
     req: Request,
 ) {
     try {
-        const { userId } = getAuth(req);
+        const { userId } = await auth();
         
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
