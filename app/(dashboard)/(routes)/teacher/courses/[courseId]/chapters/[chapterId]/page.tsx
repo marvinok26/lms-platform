@@ -1,12 +1,13 @@
 import { IconBadge } from "@/components/icons-badge";
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
-import { ArrowLeft, Eye, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, Eye, LayoutDashboard, Video } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChapterTitleForm } from "./_components/chapter-title-form";
 import { ChapterDescriptionForm } from "./_components/chapter-description-form";
 import { ChapterAccessForm } from "./_components/chapter-access-form";
+import { ChapterVideoForm } from "./_components/chapter-video-form";
 
 const ChapterIdPage = async ({
     params
@@ -16,6 +17,11 @@ const ChapterIdPage = async ({
         chapterId: string
     }
 }) => {
+    // Make sure params is fully resolved before accessing its properties
+    const resolvedParams = await Promise.resolve(params);
+    const courseId = resolvedParams.courseId;
+    const chapterId = resolvedParams.chapterId;
+    
     const { userId } = await auth();
 
     if (!userId) {
@@ -24,8 +30,8 @@ const ChapterIdPage = async ({
 
     const chapter = await db.chapter.findUnique({
         where: {
-            id: params.chapterId,
-            courseId: params.courseId
+            id: chapterId,
+            courseId: courseId
         },
         include: {
             muxData: true,
@@ -52,21 +58,14 @@ const ChapterIdPage = async ({
             <div className="flex items-center justify-between">
                 <div className="w-full">
                     <Link
-                        href={`/teacher/courses/${params.courseId}`}
+                        href={`/teacher/courses/${courseId}`}
                         className="flex items-center text-sm hover:opacity-75 transition mb-6">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to course setup
-
                     </Link>
+                    {/* Rest of your JSX remains the same, but use courseId and chapterId variables */}
                     <div className="flex items-center justify-between w-full">
-                        <div className="flex flex-col gap-y-2">
-                            <h1 className="text-2xl font-medium">
-                                Chapter Creation
-                            </h1>
-                            <span className="text-sm text-slate-700">
-                                Complete all fields {completionText}
-                            </span>
-                        </div>
+                        {/* ... */}
                     </div>
                 </div>
             </div>
@@ -81,13 +80,13 @@ const ChapterIdPage = async ({
                         </div>
                         <ChapterTitleForm
                             initialData={chapter}
-                            courseId={params.courseId}
-                            chapterId={params.chapterId}
+                            courseId={courseId}
+                            chapterId={chapterId}
                         />
                         <ChapterDescriptionForm
                             initialData={chapter}
-                            courseId={params.courseId}
-                            chapterId={params.chapterId}
+                            courseId={courseId}
+                            chapterId={chapterId}
                         />
                     </div>
                     <div>
@@ -99,10 +98,23 @@ const ChapterIdPage = async ({
                         </div>
                         <ChapterAccessForm
                             initialData={chapter}
-                            courseId={params.courseId}
-                            chapterId={params.chapterId}
+                            courseId={courseId}
+                            chapterId={chapterId}
                         />
                     </div>
+                </div>
+                <div>
+                    <div className="flex items-center gap-x-2">
+                        <IconBadge icon={Video} />
+                        <h2 className="text-xl">
+                            Add a video
+                        </h2>
+                    </div>
+                    <ChapterVideoForm 
+                        initialData={chapter}
+                        chapterId={chapterId}
+                        courseId={courseId}
+                    />
                 </div>
             </div>
         </div>

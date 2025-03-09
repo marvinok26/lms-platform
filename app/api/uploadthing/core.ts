@@ -38,6 +38,22 @@ export const ourFileRouter = {
         return { url: data.file.url };
     }),
     
+    // Add new endpoint for chapter videos
+    chapterVideo: f({
+        video: {
+            maxFileSize: "512MB",
+            maxFileCount: 1,
+        },
+    })
+    .middleware(() => {
+        console.log("Upload middleware running for chapter video");
+        return {};
+    })
+    .onUploadComplete((data) => {
+        console.log("Chapter video upload completed:", data);
+        return { url: data.file.url };
+    }),
+    
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;
