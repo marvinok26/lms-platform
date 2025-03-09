@@ -8,7 +8,7 @@ import { ImageForm } from "./_components/image-form";
 import { CategoryForm } from "./_components/category-form";
 import { PriceForm } from "./_components/price-form";
 import { AttachmentForm } from "./_components/attachment-form";
-import { ChaptersForm } from "./_components/chapters-from";
+import { ChaptersForm } from "./_components/chapters-form";
 import { currentUser } from "@clerk/nextjs/server";
 
 
