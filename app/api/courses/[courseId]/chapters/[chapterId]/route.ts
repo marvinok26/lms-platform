@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { Mux } from "@mux/mux-node";
+import { Video } from "lucide-react";
 import { NextResponse } from "next/server";
 
 // Check for environment variables
@@ -13,6 +14,100 @@ const muxClient = new Mux({
     tokenId: process.env.MUX_TOKEN_ID!,
     tokenSecret: process.env.MUX_TOKEN_SECRET!
 });
+
+export async function DELETE(
+    req: Request,
+    { params }: { params: { courseId: string, chapterId: string } }
+) {
+    try {
+        const { userId } = await auth();
+        
+        // Await params to resolve the Next.js error
+        const resolvedParams = await Promise.resolve(params);
+        const courseId = resolvedParams.courseId;
+        const chapterId = resolvedParams.chapterId;
+
+        if (!userId) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const ownCourse = await db.course.findUnique({
+            where: {
+                id: courseId,
+                userId: userId
+            }
+        });
+
+        if (!ownCourse) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const chapter = await db.chapter.findUnique({
+            where: {
+                id: chapterId,
+                courseId: courseId
+            }
+        });
+
+        if (!chapter) {
+            return new NextResponse("Chapter not found", { status: 404 });
+        }
+
+        if (chapter.videoUrl) {
+            const existingMuxData = await db.muxData.findFirst({
+                where: {
+                    chapterId: chapterId
+                }
+            });
+
+            if (existingMuxData) {
+                try {
+                    // Use muxClient instead of Video.Assets.del
+                    await muxClient.video.assets.delete(existingMuxData.assetId);
+                } catch (error) {
+                    // Log and continue if the asset can't be found
+                    console.log("Error deleting Mux asset:", error);
+                }
+                
+                await db.muxData.delete({
+                    where: {
+                        id: existingMuxData.id
+                    }
+                });
+            }
+        }
+
+        const deletedChapter = await db.chapter.delete({
+            where: {
+                id: chapterId,
+            }
+        });
+
+        const publishedChaptersInCourse = await db.chapter.findMany({
+            where: {
+                courseId: courseId,
+                isPublished: true
+            }
+        });
+
+        if (publishedChaptersInCourse.length === 0) {
+            await db.course.update({
+                where: {
+                    id: courseId
+                },
+                data: {
+                    isPublished: false
+                }
+            });
+        }
+
+        return NextResponse.json(deletedChapter);
+
+    } catch(error) {
+        console.log("[CHAPTER_ID_DELETE]", error);
+        return new NextResponse("Internal Error", { status: 500 });
+    }
+}
 
 export async function PATCH(
     req: Request,

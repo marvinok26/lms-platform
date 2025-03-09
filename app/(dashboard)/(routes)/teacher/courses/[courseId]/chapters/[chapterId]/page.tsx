@@ -8,6 +8,8 @@ import { ChapterTitleForm } from "./_components/chapter-title-form";
 import { ChapterDescriptionForm } from "./_components/chapter-description-form";
 import { ChapterAccessForm } from "./_components/chapter-access-form";
 import { ChapterVideoForm } from "./_components/chapter-video-form";
+import { Banner } from "@/components/banner";
+import { ChapterActions } from "./_components/chapter-actions";
 
 const ChapterIdPage = async ({
     params
@@ -53,7 +55,17 @@ const ChapterIdPage = async ({
 
     const completionText = `(${completedFields}/${totalFields})`;
 
+    const isCompleted = requiredFields.every(Boolean);
+
     return (
+        <>
+        {!chapter.isPublished && (
+            <Banner 
+                variant="warning"
+                label={"This chapter is not published. It will not be visible in the course"}
+            />
+
+        )}
         <div className="p-6">
             <div className="flex items-center justify-between">
                 <div className="w-full">
@@ -63,9 +75,21 @@ const ChapterIdPage = async ({
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to course setup
                     </Link>
-                    {/* Rest of your JSX remains the same, but use courseId and chapterId variables */}
                     <div className="flex items-center justify-between w-full">
-                        {/* ... */}
+                        <div className="flex flex-col gap-y-2">
+                            <h1 className="text-2xl font-medium">
+                                Chapter Creation
+                            </h1>
+                            <span className="text-sm text-slate-700">
+                                Complete all fields {completionText}
+                            </span>
+                        </div>
+                        <ChapterActions 
+                            disabled={!isCompleted}
+                            courseId={params.courseId}
+                            chapterId={params.chapterId}
+                            isPublished={chapter.isPublished}
+                        />
                     </div>
                 </div>
             </div>
@@ -118,6 +142,7 @@ const ChapterIdPage = async ({
                 </div>
             </div>
         </div>
+        </>
     )
 }
 
