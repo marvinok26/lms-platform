@@ -29,3 +29,5 @@ export const columns: ColumnDef<Course>[] = [
   },
 
 ]
+
+
